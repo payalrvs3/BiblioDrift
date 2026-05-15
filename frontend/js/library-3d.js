@@ -715,6 +715,9 @@ class BookshelfRenderer3D {
 
     openModal(book) {
         this.currentBook = book;
+        if (typeof window.logReadingActivity === 'function') {
+            window.logReadingActivity('view', `Interacted with "${book.title}" in 3D Library`);
+        }
 
         // Hide tooltip
         this.hideTooltip();
