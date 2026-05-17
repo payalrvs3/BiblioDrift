@@ -1823,6 +1823,11 @@ class GenreManager {
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 BiblioDrift Initializing...');
 
+    // Restore saved mood theme immediately
+    if (typeof restoreTheme === 'function') {
+        restoreTheme();
+    }
+
     // 1. Initialize Managers
     const libManager = new LibraryManager();
     window.libManager = libManager;
@@ -1992,6 +1997,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                     await delay(500);
                 }
                 console.log('✅ Discovery shelves populated.');
+
+                // --- Mood Theme Integration ---
+                // When users click on a section header, apply the matching theme.
+                const moodThemeMapping = {
+                    'row-rainy': 'rainy',
+                    'row-indian': 'indian-authors',
+                    'row-dark-academia': 'dark-academia'
+                };
+
+                Object.keys(moodThemeMapping).forEach(id => {
+                    const row = document.getElementById(id);
+                    if (row) {
+                        const section = row.closest('.curated-section');
+                        const header = section ? section.querySelector('.section-header') : null;
+                        if (header) {
+                            header.style.cursor = 'pointer';
+                            header.addEventListener('click', () => {
+                                if (typeof setTheme === 'function') setTheme(moodThemeMapping[id]);
+                            });
+                        }
+                    }
+                });
             } catch (err) {
                 console.error('❌ Critical error during shelf initialization:', err);
             }

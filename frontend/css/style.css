@@ -99,6 +99,43 @@ html[data-theme="night"] body {
     width: 12px;
 }
 
+/* --- Mood Theme Integration ---
+   Maps the dynamic --theme-* variables set by theme-manager.js 
+   to the project's functional CSS variables.
+*/
+[data-theme="rainy"], 
+[data-theme="cozy"], 
+[data-theme="dark-academia"], 
+[data-theme="ocean"], 
+[data-theme="indian-authors"] {
+    --bg-color: var(--theme-bg) !important;
+    --text-main: var(--theme-text) !important;
+    --text-muted: var(--theme-text-muted) !important;
+    --accent-gold: var(--theme-accent) !important;
+    --input-bg: var(--theme-pill-bg) !important;
+    --input-border: var(--theme-border) !important;
+    --book-bg: var(--theme-surface) !important;
+    --header-bg: var(--theme-bg) !important; /* Unified header bg for mood themes */
+}
+
+/* Ensure body transitions smoothly between mood themes */
+[data-theme="rainy"] body,
+[data-theme="cozy"] body,
+[data-theme="dark-academia"] body,
+[data-theme="ocean"] body,
+[data-theme="indian-authors"] body {
+    background-color: var(--bg-color) !important;
+    color: var(--text-main) !important;
+}
+
+[data-theme="rainy"] .curated-section h2,
+[data-theme="cozy"] .curated-section h2,
+[data-theme="dark-academia"] .curated-section h2,
+[data-theme="ocean"] .curated-section h2,
+[data-theme="indian-authors"] .curated-section h2 {
+    color: var(--accent-gold);
+}
+
 ::-webkit-scrollbar-track {
     background: var(--bg-color);
 }

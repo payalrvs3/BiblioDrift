@@ -940,6 +940,16 @@ Tell me: what is stirring in you today?`,
 // Global functions for HTML onclick handlers
 function sendQuickMessage(message) {
     if (window.chatInterface) {
+        // Trigger theme matching the mood suggestion
+        const lowerMsg = message.toLowerCase();
+        if (typeof setTheme === 'function') {
+            if (lowerMsg.includes('rainy') || lowerMsg.includes('melancholy')) setTheme('rainy');
+            else if (lowerMsg.includes('cozy') || lowerMsg.includes('comforting')) setTheme('cozy');
+            else if (lowerMsg.includes('ocean')) setTheme('ocean');
+            else if (lowerMsg.includes('academia') || lowerMsg.includes('thriller')) setTheme('dark-academia');
+            else if (lowerMsg.includes('india')) setTheme('indian-authors');
+        }
+
         window.chatInterface.chatInput.value = message;
         window.chatInterface.sendMessage();
     }

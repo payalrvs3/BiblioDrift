@@ -79,6 +79,7 @@ class AmbientManager {
         // Rain Toggle
         this.rainToggle.addEventListener('change', () => {
             if (this.rainToggle.checked) {
+                if (typeof setTheme === 'function') setTheme('rainy');
                 this.rainAudio.currentTime = 0;
                 this.rainAudio.play()
                     .then(() => console.log("Rain audio playing"))
@@ -96,6 +97,7 @@ class AmbientManager {
         // Fire Toggle
         this.fireToggle.addEventListener('change', () => {
             if (this.fireToggle.checked) {
+                if (typeof setTheme === 'function') setTheme('cozy');
                 this.fireAudio.currentTime = 0;
                 this.fireAudio.play()
                     .then(() => console.log("Fire audio playing"))
@@ -110,6 +112,7 @@ class AmbientManager {
         // Ocean Waves Toggle
         this.oceanToggle.addEventListener('change', () => {
             if (this.oceanToggle.checked) {
+                if (typeof setTheme === 'function') setTheme('ocean');
                 this.oceanAudio.currentTime = 0;
                 this.oceanAudio.play()
                     .then(() => console.log("Ocean audio playing"))
@@ -127,6 +130,7 @@ class AmbientManager {
         // Stormy Rain Toggle
         this.stormToggle.addEventListener('change', () => {
             if (this.stormToggle.checked) {
+                if (typeof setTheme === 'function') setTheme('rainy');
                 this.stormAudio.currentTime = 0;
                 this.stormAudio.play()
                     .then(() => console.log("Storm audio playing"))
