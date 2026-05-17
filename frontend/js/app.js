@@ -525,9 +525,6 @@ class BookRenderer {
         const thumb = volumeInfo.imageLinks ? volumeInfo.imageLinks.thumbnail : 'https://via.placeholder.com/128x196?text=No+Cover';
         const originalDescription = volumeInfo.description ? volumeInfo.description.substring(0, 100) + "..." : "A mysterious tome waiting to be opened.";
         const categories = volumeInfo.categories || [];
-        const pages = bookData.volumeInfo?.pageCount || 300;
-        const readingTimeHours = Math.round((pages * 250) / (250 * 60));
-        const readingTime = readingTimeHours < 1 ? '< 1 hr' : `~${readingTimeHours} hr${readingTimeHours > 1 ? 's' : ''}`;
 
         const vibe = this.generateVibe(originalDescription, categories);
         const spineColors = ['#5D4037', '#4E342E', '#3E2723', '#2C2420', '#8D6E63'];
@@ -578,9 +575,7 @@ class BookRenderer {
                         </div>
                         ` : ''}
                     </div>
-                    <div style="font-size: 0.7rem; color: var(--accent-gold, #c9a84c); margin-bottom: 0.5rem;">
-                         Est. reading time: ${readingTime}
-                    </div>            
+
                     <button class="read-details-btn" title="Read Details">
                         <i class="fa-solid fa-circle-info"></i> Read Details
                     </button>
