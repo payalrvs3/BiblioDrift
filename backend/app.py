@@ -141,7 +141,19 @@ jwt = JWTManager(app)
 # =====================================================================
 # ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500,http://127.0.0.1:5000,http://localhost:5000
 # For development, we'll allow all to be safe, then restrict in prod
-CORS(app, supports_credentials=True, origins=["http://127.0.0.1:5500", "http://localhost:5500", "http://127.0.0.1:5000", "http://localhost:5000"])
+CORS(
+    app,
+    supports_credentials=True,
+    origins=[
+        "http://127.0.0.1:5500",
+        "http://localhost:5500",
+        "http://127.0.0.1:5000",
+        "http://localhost:5000"
+    ],
+    methods=["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "X-CSRF-TOKEN", "Authorization"],
+    expose_headers=["Content-Type"]
+)
 
 # Initialize cache service
 cache_service.init_app(app)
@@ -1906,6 +1918,7 @@ def delete_price_alert(alert_id):
 with app.app_context():
     db.create_all()
 
+@app.route('/api/v1/books', methods=['GET'])
 @app.route('/api/books', methods=['GET'])
 def get_books():
     query = request.args.get('q')
@@ -1918,10 +1931,18 @@ def get_books():
         max_results = 10
 
     api_key = os.getenv('GOOGLE_BOOKS_API_KEY')
-    params = {
-        'q': query,
-        'maxResults': max_results,
-    }
+    allowed_params = [
+        'q', 'maxResults', 'printType', 'langRestrict', 'orderBy',
+        'projection', 'filter', 'download', 'startIndex', 'fields'
+    ]
+
+    params = {}
+    for key, value in request.args.items():
+        if key in allowed_params:
+            params[key] = value
+
+    params['q'] = query
+    params['maxResults'] = str(max_results)
     if api_key:
         params['key'] = api_key
 

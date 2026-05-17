@@ -115,11 +115,52 @@ async function loadConfig() {
         console.warn('Failed to load backend config', e);
     }
 }
-import { saveBookOffline, removeOfflineBook, db } from './db.js';
+
+async function saveBookOffline(bookData) {
+    if (!window.db || !window.db.books) {
+        console.warn('Offline storage unavailable.');
+        return false;
+    }
+
+    try {
+        await window.db.books.put({
+            id: bookData.id,
+            title: bookData.volumeInfo?.title || '',
+            author: (bookData.volumeInfo?.authors || []).join(', '),
+            content: bookData.volumeInfo?.description || '',
+            mood: (bookData.moods || []).join(', '),
+            coverUrl: bookData.volumeInfo?.imageLinks?.thumbnail || ''
+        });
+        return true;
+    } catch (error) {
+        console.error('Failed to save book offline', error);
+        return false;
+    }
+}
+
+async function removeOfflineBook(bookId) {
+    if (!window.db || !window.db.books) {
+        console.warn('Offline storage unavailable.');
+        return false;
+    }
+
+    try {
+        await window.db.books.delete(bookId);
+        return true;
+    } catch (error) {
+        console.error('Failed to remove offline book', error);
+        return false;
+    }
+}
 
 // Example click handler for your custom "Save for Offline" icon
 async function handleDownloadToggle(bookCard, bookData) {
-    const isAlreadyDownloaded = await db.downloadedBooks.get(bookData.id);
+    if (!window.db || !window.db.books) {
+        showToast('Offline storage is not initialized.', 'error');
+        return;
+    }
+
+    const isAlreadyDownloaded = await window.db.books.get(bookData.id);
     
     if (isAlreadyDownloaded) {
         const success = await removeOfflineBook(bookData.id);
@@ -918,17 +959,7 @@ class BookRenderer {
 
         try {
             const client = window.GoogleBooksClient;
-            const data = client
-                ? await client.fetchVolumes(query, { maxResults, extraParams: '&printType=books' })
-                : await (async () => {
-                    const keyParam = GOOGLE_API_KEY ? `&key=${GOOGLE_API_KEY}` : '';
-                    const encodedQuery = encodeURIComponent(query);
-                    const res = await fetch(`${API_BASE}?q=${encodedQuery}&maxResults=${maxResults}&printType=books${keyParam}`);
-                    if (!res.ok) {
-                        throw new Error(`API Error: ${res.statusText}`);
-                    }
-                    return await res.json();
-                })();
+            const data = await client.fetchVolumes(query, { maxResults, extraParams: '&printType=books' });
 
             if (data.items && data.items.length > 0) {
                 await this.renderBookCards(container, data.items.slice(0, maxResults));
@@ -1016,17 +1047,7 @@ class BookRenderer {
                 : `intitle:${title}`;
 
             try {
-                const client = window.GoogleBooksClient;
-                const data = client
-                    ? await client.fetchVolumes(searchQuery, { maxResults: 1, extraParams: '&printType=books' })
-                    : await (async () => {
-                        const keyParam = GOOGLE_API_KEY ? `&key=${GOOGLE_API_KEY}` : '';
-                        const res = await fetch(`${API_BASE}?q=${encodeURIComponent(searchQuery)}&maxResults=1&printType=books${keyParam}`);
-                        if (!res.ok) {
-                            throw new Error(`Google Books API Error: ${res.status}`);
-                        }
-                        return await res.json();
-                    })();
+                const data = await window.GoogleBooksClient.fetchVolumes(searchQuery, { maxResults: 1, extraParams: '&printType=books' });
 
                 const matchedBook = data?.items?.[0];
                 if (matchedBook) {
@@ -1784,17 +1805,7 @@ class GenreManager {
         }
 
         try {
-            const client = window.GoogleBooksClient;
-            const data = client
-                ? await client.fetchVolumes(`subject:${genre}`, { maxResults: 20, extraParams: '&langRestrict=en&orderBy=relevance' })
-                : await (async () => {
-                    const keyParam = GOOGLE_API_KEY ? `&key=${GOOGLE_API_KEY}` : '';
-                    const response = await fetch(`${API_BASE}?q=subject:${genre}&maxResults=20&langRestrict=en&orderBy=relevance${keyParam}`);
-                    if (!response.ok) {
-                        throw new Error(`API Error: ${response.status}`);
-                    }
-                    return await response.json();
-                })();
+            const data = await window.GoogleBooksClient.fetchVolumes(`subject:${genre}`, { maxResults: 20, extraParams: '&langRestrict=en&orderBy=relevance' });
 
             const items = data.items || [];
             if (items.length > 0) {
@@ -1840,8 +1851,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.renderer = new BookRenderer(libManager);
     const themeManager = new ThemeManager();
 
-    // 2. Load Config (Non-blocking)
-    loadConfig();
+    // 2. Load Config before rendering shelves so Google Books key is available.
+    await loadConfig();
 
 
 
