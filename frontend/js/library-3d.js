@@ -340,16 +340,59 @@ class BookshelfRenderer3D {
     renderConstellationView() {
         const container = document.getElementById('constellation-container');
         if (!container) return;
+        
+        // Prevent rendering if container is hidden or not in viewport
+        if (container.classList.contains('hidden')) return;
+
+        // Cancel any pending render to prevent double render pileup
+        if (this._pendingConstellationRender) {
+            cancelAnimationFrame(this._pendingConstellationRender);
+        }
+
+        // Use double requestAnimationFrame to ensure browser has completed layout and paint
+        this._pendingConstellationRender = requestAnimationFrame(() => {
+            this._pendingConstellationRender = requestAnimationFrame(() => {
+                this._pendingConstellationRender = null;
+                this._executeConstellationRender(container);
+            });
+        });
+    }
+
+    _executeConstellationRender(container) {
         const svgElement = document.getElementById('constellation-svg');
         if (!svgElement) return;
 
-        // Reset and Cleanup previous simulation
-        if (this.constellationSimulation) this.constellationSimulation.stop();
-        if (this._constellationResizeHandler) window.removeEventListener('resize', this._constellationResizeHandler);
+        // Force a layout reflow before measuring
+        container.style.display = 'block'; // Ensure it's not none during measurement
+        void container.offsetHeight; 
 
-        const width = container.clientWidth;
-        const height = container.clientHeight;
+        // Cleanup previous simulation and listeners
+        if (this.constellationSimulation) {
+            this.constellationSimulation.stop();
+            this.constellationSimulation = null;
+        }
+        if (this._constellationResizeHandler) {
+            window.removeEventListener('resize', this._constellationResizeHandler);
+        }
+
+        // Use getBoundingClientRect for more accurate dimensions than clientWidth/Height
+        const rect = container.getBoundingClientRect();
+        const width = rect.width || container.clientWidth || 800;
+        const height = rect.height || container.clientHeight || 600;
+
+        // If dimensions are still 0, we can't render properly
+        if (width === 0 || height === 0) {
+            console.warn('Constellation container has 0 dimensions, deferring render');
+            setTimeout(() => this.renderConstellationView(), 100);
+            return;
+        }
+
         svgElement.innerHTML = '';
+        const svg = d3.select(svgElement)
+            .attr('width', width)
+            .attr('height', height)
+            .attr('viewBox', `0 0 ${width} ${height}`)
+            .style('cursor', 'grab');
 
         const colors = {
             book: '#facc15',
@@ -359,7 +402,7 @@ class BookshelfRenderer3D {
             mood: '#8b5cf6'
         };
 
-        let localLibrary = this.getLibraryState();
+        const localLibrary = this.getLibraryState();        
         const allBooks = ['current', 'want', 'finished'].flatMap(s =>
             (localLibrary[s] || []).map(b => ({ ...b, shelfType: s }))
         );
@@ -380,8 +423,9 @@ class BookshelfRenderer3D {
             const n = {
                 id, type, label, ...data,
                 radius: type === 'book' ? 55 : 35,
-                x: width / 2 + (Math.random() - 0.5) * width * 0.4,
-                y: height / 2 + (Math.random() - 0.5) * height * 0.4
+                // Start nodes near center but with some spread
+                x: width / 2 + (Math.random() - 0.5) * 100,
+                y: height / 2 + (Math.random() - 0.5) * 100
             };
             nodes.push(n);
             nodeMap.set(id, n);
@@ -411,11 +455,6 @@ class BookshelfRenderer3D {
                 links.push({ source: bNode.id, target: `genre-${g}`, type: 'genre' });
             });
         });
-
-        const svg = d3.select(svgElement)
-            .attr('width', '100%')
-            .attr('height', '100%')
-            .style('cursor', 'grab');
 
         const defs = svg.append('defs');
 
@@ -459,9 +498,6 @@ class BookshelfRenderer3D {
             .velocityDecay(0.4);
 
         this.constellationSimulation = simulation;
-
-        // Warmup for immediate stable positioning
-        for (let i = 0; i < 180; ++i) simulation.tick();
 
         const link = linkLayer.selectAll('line')
             .data(links)
@@ -508,24 +544,40 @@ class BookshelfRenderer3D {
             .style('text-shadow', '0 2px 4px rgba(0,0,0,0.8)')
             .text(d => d.label.length > 22 ? d.label.substring(0, 20) + '...' : d.label);
 
+        // Fit to Viewport helper
+        const fitGraph = (animate = true) => {
+            const bounds = mainLayer.node().getBBox();
+            if (bounds.width === 0 || bounds.height === 0) return;
+            
+            const scale = 0.8 / Math.max(bounds.width / width, bounds.height / height);
+            const midX = bounds.x + bounds.width / 2;
+            const midY = bounds.y + bounds.height / 2;
+            
+            const transform = d3.zoomIdentity
+                .translate(width / 2 - midX * scale, height / 2 - midY * scale)
+                .scale(scale);
+                
+            if (animate) {
+                svg.transition().duration(800).ease(d3.easeCubicOut).call(zoom.transform, transform);
+            } else {
+                svg.call(zoom.transform, transform);
+            }
+        };
+
         simulation.on('tick', () => {
             link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
                 .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
             node.attr('transform', d => `translate(${d.x},${d.y})`);
         });
 
-        // Fit to Viewport
-        const fitGraph = (animate = true) => {
-            const bounds = mainLayer.node().getBBox();
-            if (bounds.width === 0 || bounds.height === 0) return;
-            const scale = 0.85 / Math.max(bounds.width / width, bounds.height / height);
-            const transform = d3.zoomIdentity
-                .translate(width / 2 - (bounds.x + bounds.width / 2) * scale, height / 2 - (bounds.y + bounds.height / 2) * scale)
-                .scale(scale);
-            (animate ? svg.transition().duration(800).ease(d3.easeCubicOut) : svg).call(zoom.transform, transform);
-        };
-
-        fitGraph(false);
+        // Warmup simulation and then fit
+        for (let i = 0; i < 100; ++i) simulation.tick();
+        
+        // Final layout adjustment after warmup
+        requestAnimationFrame(() => {
+            fitGraph(false);
+            simulation.alpha(0.3).restart();
+        });
 
         // Hover Animations
         node.on('mouseenter', (event, d) => {
@@ -561,15 +613,30 @@ class BookshelfRenderer3D {
         if (resetBtn) resetBtn.onclick = () => { simulation.alpha(1).restart(); fitGraph(true); };
         const fullscreenBtn = document.getElementById('fullscreen-graph-btn');
         if (fullscreenBtn) fullscreenBtn.onclick = () => {
-            if (!document.fullscreenElement) container.requestFullscreen();
-            else document.exitFullscreen();
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {
+                    console.warn(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
         };
 
+        // Resize handling
         this._constellationResizeHandler = () => {
-            const w = container.clientWidth;
-            const h = container.clientHeight;
-            svg.attr('viewBox', [0, 0, w, h]);
-            simulation.force('center', d3.forceCenter(w / 2, h / 2)).alpha(0.3).restart();
+            if (container.classList.contains('hidden')) return;
+            
+            const r = container.getBoundingClientRect();
+            const w = r.width || container.clientWidth;
+            const h = r.height || container.clientHeight;
+            
+            svg.attr('width', w).attr('height', h);
+            simulation.force('center', d3.forceCenter(w / 2, h / 2));
+            simulation.alpha(0.3).restart();
+            
+            // Re-center after a short delay to allow simulation to adjust
+            clearTimeout(this._resizeFitTimeout);
+            this._resizeFitTimeout = setTimeout(() => fitGraph(true), 150);
         };
         window.addEventListener('resize', this._constellationResizeHandler);
     }
