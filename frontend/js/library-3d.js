@@ -292,6 +292,17 @@ async function toggleOfflineBook(book, buttonElement) {
         console.error("Failed to alter local shelf cache:", error);
     }
 }
+function debounce(func, delay) {
+    let timeout;
+
+    return function (...args) {
+        clearTimeout(timeout);
+
+        timeout = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+}
 class BookshelfRenderer3D {
     constructor() {
         this.tooltip = document.getElementById('book-tooltip');
@@ -987,14 +998,21 @@ class BookshelfRenderer3D {
 
         // Search listener for "Search for a feeling..."
         const searchInput = document.getElementById('searchInput');
+
         if (searchInput) {
-            this.addManagedListener(searchInput, 'input', (e) => {
-                this.searchQuery = e.target.value.toLowerCase();
+            const debouncedSearch = debounce((value) => {
+                console.log("Debounced fired:", value);
+                this.searchQuery = value.toLowerCase();
+
                 if (this.currentView === 'shelves') {
                     this.refreshShelves();
                 } else {
                     this.renderConstellation();
                 }
+            }, 300);
+
+            this.addManagedListener(searchInput, 'input', (e) => {
+                debouncedSearch(e.target.value);
             });
         }
 
