@@ -20,38 +20,32 @@ class AmbientManager {
         this.toggleBtn.setAttribute('aria-controls', 'ambientPanel');
         this.toggleBtn.setAttribute('aria-expanded', 'false');
 
-        this.rainAudio = new Audio('https://archive.org/download/Red_Library_Nature_Rain/R22-25-General%20Rain.mp3');
+        this.rainAudio = new Audio('../assets/sounds/Rain.mp3');
         this.rainAudio.preload = 'auto';
-        this.fireAudio = new Audio('https://archive.org/download/1-hour-cozy-fire-crackling-fireplace-320/1%20hour%20Cozy%20Fire%20Crackling%20Fireplace%20320.mp3');
+        this.fireAudio = new Audio('../assets/sounds/fire.mp3');
         this.fireAudio.preload = 'auto';
         this.oceanAudio = new Audio('../assets/sounds/calm-ocean-waves.mp3');
         this.oceanAudio.preload = 'auto';
-        this.stormAudio = new Audio('../assets/sounds/Rain-and-storm.mp3');
+        this.stormAudio = new Audio('../assets/sounds/rain_and_storm.mp3');
         this.stormAudio.preload = 'auto';
-        
-        this.rainAudio.loop = true;
-        this.fireAudio.loop = true;
-        this.oceanAudio.loop = true;
-        this.stormAudio.loop = true;
 
-        // Prevent the weird 'high bass' or thunder sound at the very end of the rain track
-        // by artificially looping it a few seconds before the track actually ends.
-        this.rainAudio.addEventListener('timeupdate', () => {
-            // Cut off the last 4 seconds to bypass the microphone bump/thunder
-            if (this.rainAudio.duration && this.rainAudio.currentTime >= this.rainAudio.duration - 4) {
-                this.rainAudio.currentTime = 0;
-                // Ensure it keeps playing after reset
-                this.rainAudio.play().catch(e => {});
-            }
-        });
+        this.rainAudio.loop = false;
+        this.fireAudio.loop = false;
+        this.oceanAudio.loop = false;
+        this.stormAudio.loop = false;
+
+        this.setupAutoLoop(this.stormAudio, 3);
+        this.setupAutoLoop(this.rainAudio, 3);
+        this.setupAutoLoop(this.fireAudio, 3);
+        this.setupAutoLoop(this.oceanAudio, 3);
 
         // Global Audio Unlock (Required by modern browsers)
         this.audioUnlocked = false;
         this.unlockAudio = () => {
             if (this.audioUnlocked) return;
-            this.rainAudio.play().then(() => { this.rainAudio.pause(); }).catch(e => {});
-            this.fireAudio.play().then(() => { this.fireAudio.pause(); }).catch(e => {});
-            this.oceanAudio.play().then(() => { this.oceanAudio.pause(); }).catch(e => {});
+            this.rainAudio.play().then(() => { this.rainAudio.pause(); }).catch(e => { });
+            this.fireAudio.play().then(() => { this.fireAudio.pause(); }).catch(e => { });
+            this.oceanAudio.play().then(() => { this.oceanAudio.pause(); }).catch(e => { });
             console.log("Audio Context Unlocked");
             this.audioUnlocked = true;
             window.removeEventListener('click', this.unlockAudio);
@@ -247,6 +241,16 @@ class AmbientManager {
         this.stormAudio.volume = startVolume;
         // initialize UI fill
         this.updateVolumeUI(startVolume);
+    }
+
+    // The Generic Looping Engine
+    setupAutoLoop(audioInstance, cutOffSeconds) {
+        audioInstance.addEventListener('timeupdate', () => {
+            if (audioInstance.duration && audioInstance.currentTime >= audioInstance.duration - cutOffSeconds) {
+                audioInstance.currentTime = 0;
+                audioInstance.play().catch(e => { });
+            }
+        });
     }
 }
 
