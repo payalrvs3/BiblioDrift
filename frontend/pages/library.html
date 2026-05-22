@@ -135,13 +135,50 @@
 
             <!-- Empty State Placeholder (Visible when filter returns no books) -->
             <div id="library-empty-state" class="library-empty-state" hidden>
-                <div class="empty-state-icon">
-                    <i class="fa-solid fa-book-open"></i>
+                <!-- Animated SVG Illustration -->
+                <div class="empty-state-illustration">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" class="empty-shelf-svg">
+                        <!-- Empty bookshelf illustration -->
+                        <rect x="20" y="140" width="160" height="8" fill="var(--accent-gold)" opacity="0.3" rx="2"/>
+                        <rect x="25" y="148" width="150" height="4" fill="var(--accent-gold)" opacity="0.2" rx="1"/>
+                        
+                        <!-- Open book in center -->
+                        <g class="floating-book">
+                            <path d="M70 80 L70 120 L100 115 L130 120 L130 80 L100 85 Z" 
+                                  fill="var(--card-bg)" 
+                                  stroke="var(--accent-gold)" 
+                                  stroke-width="2"/>
+                            <line x1="100" y1="85" x2="100" y2="115" 
+                                  stroke="var(--accent-gold)" 
+                                  stroke-width="1.5" 
+                                  opacity="0.5"/>
+                            <!-- Pages -->
+                            <path d="M75 90 L95 92" stroke="var(--text-muted)" opacity="0.3" stroke-width="1"/>
+                            <path d="M75 95 L92 97" stroke="var(--text-muted)" opacity="0.3" stroke-width="1"/>
+                            <path d="M75 100 L90 102" stroke="var(--text-muted)" opacity="0.3" stroke-width="1"/>
+                            <path d="M105 92 L125 90" stroke="var(--text-muted)" opacity="0.3" stroke-width="1"/>
+                            <path d="M108 97 L125 95" stroke="var(--text-muted)" opacity="0.3" stroke-width="1"/>
+                            <path d="M110 102 L125 100" stroke="var(--text-muted)" opacity="0.3" stroke-width="1"/>
+                        </g>
+                        
+                        <!-- Sparkles -->
+                        <circle cx="50" cy="60" r="2" fill="var(--accent-gold)" class="sparkle sparkle-1"/>
+                        <circle cx="150" cy="70" r="2" fill="var(--accent-gold)" class="sparkle sparkle-2"/>
+                        <circle cx="100" cy="50" r="1.5" fill="var(--accent-gold)" class="sparkle sparkle-3"/>
+                    </svg>
                 </div>
-                <h2>No books found here</h2>
-                <p>Your search for adventure continues... try a different shelf or explore new titles!</p>
+                
+                <!-- Enhanced Typography -->
+                <div class="empty-state-content">
+                    <h2 class="empty-state-title">Your library awaits its first chapter</h2>
+                    <p class="empty-state-description">
+                        No books found here. Start your reading journey by discovering stories that speak to your soul.
+                    </p>
+                </div>
+                
+                <!-- Call to Action -->
                 <a href="index.html" class="btn-primary library-empty-link">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Explore Books
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Discover Books
                 </a>
             </div>
 
