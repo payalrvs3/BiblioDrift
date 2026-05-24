@@ -929,6 +929,12 @@
                         return false; // Stop submission
                     }
                 }
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+                }
+
                 if (originalOnSubmit) {
                     return originalOnSubmit.call(this, event);
                 }
