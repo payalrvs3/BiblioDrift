@@ -3619,6 +3619,7 @@ textarea:focus {
 /* --- Merge Conflict Resolution: Added styles from feat/issue-21-api-errors --- */
 /* Empty State and Error Handling */
 .empty-state {
+
     display: flex;
     flex-direction: column;
     align-items: center;

@@ -30,8 +30,12 @@
     <meta property="og:image:height" content="630" />
     <title>My Library | BiblioDrift</title>
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/reading-streak.css">
+
     <link rel="stylesheet" href="../css/pwa.css">
     <link rel="stylesheet" href="../css/style-responsive.css">
+    <link rel="stylesheet" href="../css/style-responsive-reading-streak.css">
+
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Georgia&display=swap"
         rel="stylesheet">
@@ -142,9 +146,45 @@
                 </div>
         </section>
 
+        <!-- Reading Streak (cozy GitHub-style heatmap) -->
+        <section class="reading-streak-section">
+            <div class="reading-streak-card">
+                <div class="reading-streak-header">
+                    <div class="reading-streak-title">
+                        <i class="fa-solid fa-fire" aria-hidden="true"></i>
+                        <h2>Reading Streak</h2>
+                    </div>
+
+                    <div class="reading-streak-stats">
+                        <div class="reading-streak-stat">
+                            <div class="reading-streak-stat-value" id="reading-streak-current">0</div>
+                            <div class="reading-streak-stat-label">Current</div>
+                        </div>
+                        <div class="reading-streak-stat">
+                            <div class="reading-streak-stat-value" id="reading-streak-longest">0</div>
+                            <div class="reading-streak-stat-label">Longest</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reading-streak-heatmap-wrap">
+                    <div class="reading-streak-heatmap-toolbar">
+                        <button id="reading-streak-mark-today" class="reading-streak-btn" type="button" aria-label="Mark today as read">
+                            <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                            <span>Mark Today as Read</span>
+                        </button>
+                    </div>
+
+                    <div class="reading-streak-scroll" role="region" aria-label="Reading streak heatmap">
+                        <div id="reading-streak-calendar" class="reading-streak-calendar"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- 3D Bookshelf Container -->
         <div class="bookshelf-3d-container" id="library-shelves" role="main" aria-label="3D bookshelf library">
+
 
             <!-- Empty State Placeholder (Visible when filter returns no books) -->
             <div id="library-empty-state" class="library-empty-state" hidden>
@@ -777,7 +817,9 @@
     </div>
   </div>
   <script src="../js/chatbot.js"></script>
+    <script src="../js/reading-streak.js"></script>
 
 </body>
 
 </html>
+
