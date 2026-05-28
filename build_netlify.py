@@ -79,6 +79,7 @@ def write_clean_route_redirects() -> None:
         "/contributors /contributors.html 200",
         "/contributing /contributing.html 200",
         "/community-stories /community-stories.html 200",
+        "/nearby-bookstores /nearby-bookstores.html 200",
     ]
     (DIST / "_redirects").write_text("\n".join(redirects) + "\n", encoding="utf-8")
 
